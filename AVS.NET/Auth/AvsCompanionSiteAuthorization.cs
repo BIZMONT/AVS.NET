@@ -73,38 +73,38 @@ namespace AVS.Auth
         }
 
         #region Public methods
-        public virtual async Task<CodeGrantToken> AskForCodeGrantToken(string code)
+        public virtual async Task<CodeGrantToken> AskForCodeGrantTokenAsync(string code)
         {
             var bodyParameters = new Dictionary<string, string>
                 {
                     {"grant_type", "authorization_code"},
                     {"code", code},
-                    {"client_id", Settings.ClientId},
-                    {"client_secret", Settings.ClientSecret},
-                    {"redirect_uri", Settings.RedirectUri},
+                    {"client_id", Settings?.ClientId},
+                    {"client_secret", Settings?.ClientSecret},
+                    {"redirect_uri", Settings?.RedirectUri},
                 };
 
             var content = new FormUrlEncodedContent(bodyParameters);
 
-            CodeGrantToken token = await GetTokenFromAmazonAuthApi(content);
+            CodeGrantToken token = await GetTokenFromAmazonAuthApiAsync(content);
 
             return token;
         }
 
-        public virtual async Task<CodeGrantToken> RefreshCodeGrandToken(string refreshToken)
+        public virtual async Task<CodeGrantToken> RefreshCodeGrandTokenAsync(string refreshToken)
         {
 
             var bodyParameters = new Dictionary<string, string>
             {
                 {"grant_type", "refresh_token"},
                 {"refresh_token",refreshToken},
-                {"client_id", Settings.ClientId},
-                {"client_secret", Settings.ClientSecret},
+                {"client_id", Settings?.ClientId},
+                {"client_secret", Settings?.ClientSecret},
             };
 
             var content = new FormUrlEncodedContent(bodyParameters);
 
-            CodeGrantToken token = await GetTokenFromAmazonAuthApi(content);
+            CodeGrantToken token = await GetTokenFromAmazonAuthApiAsync(content);
 
             return token;
         }
@@ -116,12 +116,12 @@ namespace AVS.Auth
             var requestUri = new UriBuilder(_authUrl);
 
             NameValueCollection query = HttpUtility.ParseQueryString(requestUri.Query);
-            query["client_id"] = Settings.ClientId;
+            query["client_id"] = Settings?.ClientId;
             query["scope"] = scope;
             query["scope_data"] = GenerateScopeDataJson(scope);
             query["response_type"] = authType.ToString().ToLower();
             query["state"] = state;
-            query["redirect_uri"] = Settings.RedirectUri;
+            query["redirect_uri"] = Settings?.RedirectUri;
 
             requestUri.Query = query.ToString();
 
@@ -130,7 +130,7 @@ namespace AVS.Auth
         #endregion
 
         #region Private methods
-        private async Task<CodeGrantToken> GetTokenFromAmazonAuthApi(FormUrlEncodedContent content)
+        private async Task<CodeGrantToken> GetTokenFromAmazonAuthApiAsync(FormUrlEncodedContent content)
         {
             CodeGrantToken accessToken = null;
 
@@ -171,10 +171,10 @@ namespace AVS.Auth
                     scopeName,
                     JObject.FromObject(new
                     {
-                        productID = Settings.ProductId,
+                        productID = Settings?.ProductId,
                         productInstanceAttributes = new
                         {
-                            deviceSerialNumber = Settings.DeviceSerialNumber
+                            deviceSerialNumber = Settings?.DeviceSerialNumber
                         }
                     })
                 }
