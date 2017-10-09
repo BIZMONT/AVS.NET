@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using AVS.Auth;
+using AVS.NET.Auth;
 
 namespace AVS.WebServer
 {
@@ -20,7 +21,7 @@ namespace AVS.WebServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-            services.Configure<AuthorizationSettings>(Configuration.GetSection("AvsSettings"));
+            services.Configure<AvsAuthorizationSettings>(Configuration.GetSection("AvsSettings"));
 
             services.AddMvc();
             services.AddDistributedMemoryCache();

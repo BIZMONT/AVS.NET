@@ -5,14 +5,15 @@ using AVS.Auth;
 using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using AVS.NET.Auth;
 
 namespace AVS.WebServer.Controllers
 {
     public class AvsAuthController : Controller
     {
-        public AuthorizationSettings AvsAuthorizationSettings { get; set; }
+        public AvsAuthorizationSettings AvsAuthorizationSettings { get; set; }
 
-        public AvsAuthController(IOptions<AuthorizationSettings> avsOptions)
+        public AvsAuthController(IOptions<AvsAuthorizationSettings> avsOptions)
         {
             AvsAuthorizationSettings = avsOptions.Value;
         }

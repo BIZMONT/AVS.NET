@@ -1,5 +1,6 @@
 ﻿using AVS.Auth.Tokens;
 using AVS.Enums;
+using AVS.NET.Auth;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -64,10 +65,10 @@ namespace AVS.Auth
         }
 
 
-        public AuthorizationSettings Settings { get; set; }
+        public AvsAuthorizationSettings Settings { get; set; }
         #endregion
 
-        public AvsCompanionSiteAuthorization(AuthorizationSettings settings)
+        public AvsCompanionSiteAuthorization(AvsAuthorizationSettings settings)
         {
             Settings = settings;
         }
@@ -182,14 +183,5 @@ namespace AVS.Auth
             return Regex.Replace(scopeData.ToString(), @"\s+", string.Empty);
         }
         #endregion
-    }
-
-    public class AuthorizationSettings
-    {
-        public string ClientId { get; set; }
-        public string ClientSecret { get; set; }
-        public string ProductId { get; set; }
-        public string RedirectUri { get; set; }
-        public string DeviceSerialNumber { get; set; }
     }
 }

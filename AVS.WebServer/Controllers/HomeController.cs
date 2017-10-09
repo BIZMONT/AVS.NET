@@ -6,14 +6,15 @@ using AVS.Auth;
 using AVS.Enums;
 using Microsoft.Extensions.Options;
 using AVS.WebServer.Models;
+using AVS.NET.Auth;
 
 namespace AVS.WebServer.Controllers
 {
     public class HomeController : Controller
     {
-        public AuthorizationSettings AvsAuthorizationSettings { get; set; }
+        public AvsAuthorizationSettings AvsAuthorizationSettings { get; set; }
 
-        public HomeController(IOptions<AuthorizationSettings> avsOptions)
+        public HomeController(IOptions<AvsAuthorizationSettings> avsOptions)
         {
             AvsAuthorizationSettings = avsOptions.Value;
         }
