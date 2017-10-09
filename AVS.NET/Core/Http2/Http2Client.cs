@@ -29,6 +29,7 @@ namespace AVS.Core.Http2
         public IDictionary<string, string> Headers { get; private set; }
         #endregion
 
+        #region Public methods
         public async Task ConnectAsync()
         {
             if (_connection != null)
@@ -74,7 +75,7 @@ namespace AVS.Core.Http2
 
             Headers = contentHeaders
                 .Concat(Headers.Where(header => !contentHeaders.ContainsKey(header.Key)))
-                .ToDictionary(item=>item.Key,item=>item.Value);
+                .ToDictionary(item => item.Key, item => item.Value);
 
             IStream stream = await MakeRequest("POST", path);
 
@@ -84,7 +85,9 @@ namespace AVS.Core.Http2
 
             return await GetResponse(stream);
         }
+        #endregion
 
+        #region Private methods
         private async Task<IStream> MakeRequest(string method, string path)
         {
             IDictionary<string, string> basicHeaders = new Dictionary<string, string>{
@@ -117,9 +120,11 @@ namespace AVS.Core.Http2
 
         private async Task<Http2ResponseMessage> GetResponse(IStream stream)
         {
-            IEnumerable<HeaderField> responseHeaders = await stream.ReadHeadersAsync();
-
+            IEnumerable<HeaderField> responseHeaders = new List<HeaderField>();
             List<byte> responseData = new List<byte>();
+
+            responseHeaders = await stream.ReadHeadersAsync();
+
             byte[] buf = new byte[8192];
             while (true)
             {
@@ -131,10 +136,14 @@ namespace AVS.Core.Http2
                 responseData.AddRange(buf.Take(res.BytesRead));
             }
 
-            await stream.CloseAsync();
+            if (stream.State != StreamState.Closed)
+            {
+                await stream.CloseAsync();
+            }
 
             return new Http2ResponseMessage(responseHeaders.ToDictionary(item => item.Name, item => item.Value), responseData.ToArray());
         }
+        #endregion
 
         #region IDisposable implementation
         public void Dispose()

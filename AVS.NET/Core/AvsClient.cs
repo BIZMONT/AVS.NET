@@ -9,7 +9,7 @@ namespace AVS.Core
 {
     public class AvsClient : IDisposable
     {
-        private string _apiVersion;
+        private string _apiVersion = "v20160207";
         public string AccessToken { get; }
 
         private Http2Client _http2Client;

@@ -7,6 +7,9 @@ using AVS.Enums;
 using Microsoft.Extensions.Options;
 using AVS.WebServer.Models;
 using AVS.NET.Auth;
+using System.Threading.Tasks;
+using AVS.Core;
+using Newtonsoft.Json;
 
 namespace AVS.WebServer.Controllers
 {
@@ -43,6 +46,26 @@ namespace AVS.WebServer.Controllers
             }
 
             return View(model);
+        }
+
+        [Route("/communicate")]
+        [HttpPost]
+        public async Task<IActionResult> Communicate()
+        {
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+            var accessTokenExpires = HttpContext.Session.GetString("ExpiresDate");
+
+            DateTime.TryParse(accessTokenExpires, out DateTime accessTokenExpiresDate);
+
+            if (!string.IsNullOrEmpty(accessToken) || accessTokenExpiresDate > DateTime.Now)
+            {
+                Uri avsServerUri = new Uri("https://avs-alexa-eu.amazon.com");
+                using (var avsClient = new AvsClient(avsServerUri, accessToken))
+                {
+                    var result = await avsClient.EstablishConnectionAsync();
+                }
+            }
+            return Json(new { });
         }
     }
 }

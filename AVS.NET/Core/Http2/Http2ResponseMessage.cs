@@ -16,7 +16,7 @@ namespace AVS.Core.Http2
             Headers = headers;
             Data = data;
 
-            var code = Headers["statuscode"];
+            var code = Headers[":status"];
             _statusCode = Enum.Parse<HttpStatusCode>(code);
         }
 
@@ -24,11 +24,12 @@ namespace AVS.Core.Http2
         {
             get
             {
-
                 return _statusCode;
             }
         }
+
         public IDictionary<string, string> Headers { get; private set; }
+
         public byte[] Data { get; private set; }
 
         public bool IsSuccessStatusCode
