@@ -22,11 +22,11 @@ namespace AVS.Core.Http2
         {
             _uri = uri;
             _isSsl = uri.Scheme == "https";
-            Headers = new List<HeaderField>();
+            Headers = new Dictionary<string, string>();
         }
 
         #region Properties
-        public ICollection<HeaderField> Headers { get; }
+        public IDictionary<string, string> Headers { get; private set; }
         #endregion
 
         public async Task ConnectAsync()
@@ -70,7 +70,11 @@ namespace AVS.Core.Http2
 
         public async Task<Http2ResponseMessage> PostAsync(string path, HttpContent content)
         {
-            content.Headers.Select(header => new HeaderField() { Name = header.Key, Value = string.Join(";", header.Value) });
+            var contentHeaders = content.Headers.ToDictionary(item => item.Key, item => string.Join("; ", item.Value));
+
+            Headers = contentHeaders
+                .Concat(Headers.Where(header => !contentHeaders.ContainsKey(header.Key)))
+                .ToDictionary(item=>item.Key,item=>item.Value);
 
             IStream stream = await MakeRequest("POST", path);
 
@@ -83,14 +87,28 @@ namespace AVS.Core.Http2
 
         private async Task<IStream> MakeRequest(string method, string path)
         {
-            HeaderField[] basicHeaders = new HeaderField[]{
-                new HeaderField(){Name = ":method", Value = method},
-                new HeaderField(){Name = ":scheme", Value = _uri.Scheme},
-                new HeaderField(){Name = ":path", Value = path},
-                new HeaderField(){Name = ":authority", Value = $"{_uri.Host}:{_uri.Port}"},
+            IDictionary<string, string> basicHeaders = new Dictionary<string, string>{
+                {":method", method},
+                {":scheme", _uri.Scheme},
+                {":path", path},
+                {":authority", $"{_uri.Host}:{_uri.Port}"},
             };
 
-            var headers = basicHeaders.Concat(Headers).Distinct(new HeaderFieldComparer());
+            var userHeaders = Headers.Where(header => !basicHeaders.ContainsKey(header.Key));
+
+            var headers = basicHeaders
+                .Concat(userHeaders)
+                .Select(header => new HeaderField()
+                {
+                    Name = header.Key,
+                    Value = header.Value
+                });
+
+
+            if (_connection == null)
+            {
+                await ConnectAsync();
+            }
 
             IStream stream = await _connection.CreateStreamAsync(headers);
 
@@ -106,13 +124,16 @@ namespace AVS.Core.Http2
             while (true)
             {
                 StreamReadResult res = await stream.ReadAsync(new ArraySegment<byte>(buf));
-                if (res.EndOfStream) break;
+                if (res.EndOfStream)
+                {
+                    break;
+                }
                 responseData.AddRange(buf.Take(res.BytesRead));
             }
 
             await stream.CloseAsync();
 
-            return new Http2ResponseMessage(responseHeaders, responseData.ToArray());
+            return new Http2ResponseMessage(responseHeaders.ToDictionary(item => item.Name, item => item.Value), responseData.ToArray());
         }
 
         #region IDisposable implementation
@@ -121,23 +142,5 @@ namespace AVS.Core.Http2
             _connection.CloseNow().Wait();
         }
         #endregion
-    }
-
-    internal class HeaderFieldComparer : IEqualityComparer<HeaderField>
-    {
-        public bool Equals(HeaderField x, HeaderField y)
-        {
-            return x.Name.Equals(y.Name, StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        public int GetHashCode(HeaderField obj)
-        {
-            int hash = 13;
-            hash = (hash * 7) + obj.Name.GetHashCode();
-            hash = (hash * 7) + obj.Value.GetHashCode();
-            hash = (hash * 7) + obj.Sensitive.GetHashCode();
-
-            return hash;
-        }
     }
 }

@@ -10,17 +10,16 @@ namespace AVS.Core
     public class AvsClient : IDisposable
     {
         private string _apiVersion;
-        public string AccessToken { get; set; }
+        public string AccessToken { get; }
 
         private Http2Client _http2Client;
 
         #region Constructors
-        public AvsClient(Uri url) : this(url, string.Empty) { }
-
         public AvsClient(Uri uri, string accessToken)
         {
             AccessToken = accessToken;
             _http2Client = new Http2Client(uri);
+            _http2Client.Headers.Add("authorization", $"Bearer {AccessToken}");
         }
         #endregion
 
@@ -28,11 +27,6 @@ namespace AVS.Core
         {
             try
             {
-                await _http2Client.ConnectAsync();
-
-                _http2Client.Headers.Clear();
-                _http2Client.Headers.Add(new HeaderField() { Name = "authorization", Value = $"Bearer {AccessToken}" });
-
                 var response = await _http2Client.GetAsync($"/{_apiVersion}/directives");
 
                 return response.IsSuccessStatusCode;

@@ -11,12 +11,12 @@ namespace AVS.Core.Http2
     {
         private HttpStatusCode _statusCode;
 
-        public Http2ResponseMessage(IEnumerable<HeaderField> headers, byte[] data)
+        public Http2ResponseMessage(IDictionary<string,string> headers, byte[] data)
         {
             Headers = headers;
             Data = data;
 
-            var code = Headers.First(header => header.Name.Equals("statuscode", StringComparison.InvariantCultureIgnoreCase)).Value;
+            var code = Headers["statuscode"];
             _statusCode = Enum.Parse<HttpStatusCode>(code);
         }
 
@@ -28,7 +28,7 @@ namespace AVS.Core.Http2
                 return _statusCode;
             }
         }
-        public IEnumerable<HeaderField> Headers { get; private set; }
+        public IDictionary<string, string> Headers { get; private set; }
         public byte[] Data { get; private set; }
 
         public bool IsSuccessStatusCode
