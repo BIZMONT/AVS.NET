@@ -64,9 +64,9 @@ namespace AVS.Core.Http2
 
         public async Task<Http2ResponseMessage> GetAsync(string path)
         {
-            IStream stream = await MakeRequest("GET", path);
+            IStream stream = await MakeRequestAsync("GET", path);
 
-            return await GetResponse(stream);
+            return await GetResponseAsync(stream);
         }
 
         public async Task<Http2ResponseMessage> PostAsync(string path, HttpContent content)
@@ -77,18 +77,18 @@ namespace AVS.Core.Http2
                 .Concat(Headers.Where(header => !contentHeaders.ContainsKey(header.Key)))
                 .ToDictionary(item => item.Key, item => item.Value);
 
-            IStream stream = await MakeRequest("POST", path);
+            IStream stream = await MakeRequestAsync("POST", path);
 
             var contentBytes = await content.ReadAsByteArrayAsync();
             var buffer = new ArraySegment<byte>(contentBytes);
             await stream.WriteAsync(buffer);
 
-            return await GetResponse(stream);
+            return await GetResponseAsync(stream);
         }
         #endregion
 
         #region Private methods
-        private async Task<IStream> MakeRequest(string method, string path)
+        private async Task<IStream> MakeRequestAsync(string method, string path)
         {
             IDictionary<string, string> basicHeaders = new Dictionary<string, string>{
                 {":method", method},
@@ -118,7 +118,7 @@ namespace AVS.Core.Http2
             return stream;
         }
 
-        private async Task<Http2ResponseMessage> GetResponse(IStream stream)
+        private async Task<Http2ResponseMessage> GetResponseAsync(IStream stream)
         {
             IEnumerable<HeaderField> responseHeaders = new List<HeaderField>();
             List<byte> responseData = new List<byte>();
@@ -126,17 +126,25 @@ namespace AVS.Core.Http2
             responseHeaders = await stream.ReadHeadersAsync();
 
             byte[] buf = new byte[8192];
+
             while (true)
             {
-                StreamReadResult res = await stream.ReadAsync(new ArraySegment<byte>(buf));
-                if (res.EndOfStream)
+                try
+                {
+                    StreamReadResult res = await stream.ReadAsync(new ArraySegment<byte>(buf));
+                    if (res.EndOfStream)
+                    {
+                        break;
+                    }
+                    responseData.AddRange(buf.Take(res.BytesRead));
+                }
+                catch
                 {
                     break;
                 }
-                responseData.AddRange(buf.Take(res.BytesRead));
             }
 
-            if (stream.State != StreamState.Closed)
+            if (stream.State != StreamState.Closed && stream.State != StreamState.Reset)
             {
                 await stream.CloseAsync();
             }
