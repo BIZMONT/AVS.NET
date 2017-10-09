@@ -29,7 +29,7 @@ namespace AVS.Core.Http2
         public ICollection<HeaderField> Headers { get; }
         #endregion
 
-        public async void ConnectAsync()
+        public async Task ConnectAsync()
         {
             if (_connection != null)
             {

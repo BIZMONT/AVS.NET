@@ -30,5 +30,13 @@ namespace AVS.Core.Http2
         }
         public IEnumerable<HeaderField> Headers { get; private set; }
         public byte[] Data { get; private set; }
+
+        public bool IsSuccessStatusCode
+        {
+            get
+            {
+                return _statusCode >= HttpStatusCode.OK && _statusCode < HttpStatusCode.MultipleChoices;
+            }
+        }
     }
 }
