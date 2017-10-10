@@ -1,4 +1,5 @@
-﻿using Http2.Hpack;
+﻿using Http2;
+using Http2.Hpack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,14 +8,15 @@ using System.Text;
 
 namespace AVS.Core.Http2
 {
-    internal struct Http2ResponseMessage
+    internal struct Http2Response
     {
         private HttpStatusCode _statusCode;
 
-        public Http2ResponseMessage(IDictionary<string,string> headers, byte[] data)
+        public Http2Response(IStream stream, IDictionary<string, string> headers, byte[] data)
         {
             Headers = headers;
             Data = data;
+            Stream = stream;
 
             var code = Headers[":status"];
             _statusCode = Enum.Parse<HttpStatusCode>(code);
@@ -27,6 +29,8 @@ namespace AVS.Core.Http2
                 return _statusCode;
             }
         }
+
+        public IStream Stream { get; private set; }
 
         public IDictionary<string, string> Headers { get; private set; }
 

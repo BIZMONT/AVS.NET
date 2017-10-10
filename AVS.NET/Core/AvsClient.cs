@@ -1,33 +1,44 @@
 ﻿using AVS.Core.Http2;
-using Http2.Hpack;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AVS.Core
 {
     public class AvsClient : IDisposable
     {
-        private string _apiVersion = "v20160207";
-        public string AccessToken { get; }
+        private static string _apiVersion = "v20160207";
+
+        private string _accessToken;
+
+        public string AccessToken
+        {
+            get
+            {
+                return _accessToken;
+            }
+            set
+            {
+                _accessToken = value;
+                _http2Client.Headers["authorization"] = $"Bearer {_accessToken}";
+            }
+        }
 
         private Http2Client _http2Client;
 
         #region Constructors
         public AvsClient(Uri uri, string accessToken)
         {
-            AccessToken = accessToken;
+            _accessToken = accessToken;
             _http2Client = new Http2Client(uri);
             _http2Client.Headers.Add("authorization", $"Bearer {AccessToken}");
         }
         #endregion
 
-        public async Task<bool> EstablishConnectionAsync()
+        public async Task<bool> TryEstablishConnectionAsync()
         {
             try
             {
-                var response = await _http2Client.GetAsync($"/{_apiVersion}/directives");
+                var response = await _http2Client.GetAsync($"/{_apiVersion}/directives", true);
 
                 return response.IsSuccessStatusCode;
             }

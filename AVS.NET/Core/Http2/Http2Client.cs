@@ -61,14 +61,14 @@ namespace AVS.Core.Http2
             }
         }
 
-        public async Task<Http2ResponseMessage> GetAsync(string path)
+        public async Task<Http2Response> GetAsync(string path, bool closeAfterRead = false)
         {
             IStream stream = await MakeRequestAsync("GET", path);
 
-            return await GetResponseAsync(stream);
+            return await GetResponseAsync(stream, closeAfterRead);
         }
 
-        public async Task<Http2ResponseMessage> PostAsync(string path, HttpContent content)
+        public async Task<Http2Response> PostAsync(string path, HttpContent content, bool closeAfterRead = false)
         {
             var contentHeaders = content.Headers.ToDictionary(item => item.Key, item => string.Join("; ", item.Value));
 
@@ -82,7 +82,7 @@ namespace AVS.Core.Http2
             var buffer = new ArraySegment<byte>(contentBytes);
             await stream.WriteAsync(buffer);
 
-            return await GetResponseAsync(stream);
+            return await GetResponseAsync(stream, closeAfterRead);
         }
         #endregion
 
@@ -117,12 +117,20 @@ namespace AVS.Core.Http2
             return stream;
         }
 
-        private async Task<Http2ResponseMessage> GetResponseAsync(IStream stream)
+        private async Task<Http2Response> GetResponseAsync(IStream stream, bool closeAfterRead)
         {
-            IEnumerable<HeaderField> responseHeaders = new List<HeaderField>();
+            IDictionary<string, string> responseHeaders = new Dictionary<string,string>();
             List<byte> responseData = new List<byte>();
 
-            responseHeaders = await stream.ReadHeadersAsync();
+            try
+            {
+                var responseHeadersFields = await stream.ReadHeadersAsync();
+                responseHeaders = responseHeadersFields.ToDictionary(item => item.Name, item => item.Value);
+            }
+            catch
+            {
+                //TODO: Handle exceptions
+            }
 
             byte[] buf = new byte[8192];
 
@@ -139,16 +147,17 @@ namespace AVS.Core.Http2
                 }
                 catch
                 {
+                    //TODO: Handle exceptions
                     break;
                 }
             }
 
-            if (stream.State != StreamState.Closed && stream.State != StreamState.Reset)
+            if (closeAfterRead && stream.State != StreamState.Closed && stream.State != StreamState.Reset)
             {
                 await stream.CloseAsync();
             }
 
-            return new Http2ResponseMessage(responseHeaders.ToDictionary(item => item.Name, item => item.Value), responseData.ToArray());
+            return new Http2Response(stream, responseHeaders, responseData.ToArray());
         }
         #endregion
 

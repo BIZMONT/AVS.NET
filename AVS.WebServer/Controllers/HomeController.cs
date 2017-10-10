@@ -62,7 +62,10 @@ namespace AVS.WebServer.Controllers
                 Uri avsServerUri = new Uri("https://avs-alexa-eu.amazon.com");
                 using (var avsClient = new AvsClient(avsServerUri, accessToken))
                 {
-                    var result = await avsClient.EstablishConnectionAsync();
+                    if(await avsClient.TryEstablishConnectionAsync())
+                    {
+
+                    }
                 }
             }
             return Json(new { });
