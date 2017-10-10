@@ -46,7 +46,6 @@ namespace AVS.Core
             {
                 return false;
             }
-
         }
 
         public void Dispose()
