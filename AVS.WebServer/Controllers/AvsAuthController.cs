@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using AVS.WebServer.Models;
 using AVS.Auth;
 using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using AVS.NET.Auth;
+using AVS.Auth.Requests;
+using AVS.Auth.Tokens;
 
 namespace AVS.WebServer.Controllers
 {
@@ -19,7 +19,7 @@ namespace AVS.WebServer.Controllers
         }
 
         [Route("/auth/code")]
-        public async Task<IActionResult> CodeAuth(AvsCodeGrandRequestModel model)
+        public async Task<IActionResult> CodeGrantAuth(CodeGrantRequest model)
         {
             var avsAuth = new AvsCompanionSiteAuthorization(AvsAuthorizationSettings);
 
@@ -29,12 +29,32 @@ namespace AVS.WebServer.Controllers
             {
                 HttpContext.Session.SetString("AccessToken", token.AccessToken);
                 HttpContext.Session.SetString("ExpiresDate", token.ExpiresDate.ToString());
+                HttpContext.Session.SetString("RefreshToken", token.RefreshToken);
             }
             else
             {
                 return Content("Access token is invalid");
             }
 
+            return RedirectToAction("Index", "Home");
+        }
+
+        [Route("/auth/token")]
+        public IActionResult ImplicitGrantAuth(ImplicitGrantRequest model)
+        {
+            var avsAuth = new AvsCompanionSiteAuthorization(AvsAuthorizationSettings);
+
+            ImplicitGrantToken token = model;
+
+            if (token.IsValid)
+            {
+                HttpContext.Session.SetString("AccessToken", token.AccessToken);
+                HttpContext.Session.SetString("ExpiresDate", token.ExpiresDate.ToString());
+            }
+            else
+            {
+                return Content("Access token is invalid");
+            }
 
             return RedirectToAction("Index", "Home");
         }

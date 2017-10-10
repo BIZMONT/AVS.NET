@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 using static Http2.IoStreamExtensions;
 
