@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using AVS.Core.Request.Metadata.Context;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace AVS.Core.Request.Metadata
@@ -12,9 +13,9 @@ namespace AVS.Core.Request.Metadata
         }
 
         [JsonProperty("context")]
-        public ICollection<ContextItem> Context { get; private set; }
+        public ICollection<ContextItem> Context { get; set; }
 
         [JsonProperty("event")]
-        public Event Event { get; private set; }
+        public Event Event { get; set; }
     }
 }

@@ -12,9 +12,9 @@ namespace AVS.Core.Request.Metadata
         }
 
         [JsonProperty("header")]
-        public EventHeader Header { get; private set; }
+        public EventHeader Header { get; set; }
 
         [JsonProperty("payload")]
-        public IDictionary<string, object> Payload { get; private set; }
+        public IDictionary<string, object> Payload { get; set; }
     }
 }
